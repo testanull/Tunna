@@ -28,9 +28,7 @@ Defaults={
 	'bufferSize':1024*8
 }
 
-class SocksServer():
-	#bufferSizeSize = 1024-4
-
+class SocksServer(object):
 	def __init__(self, socket, event=threading.Event(), bufferSize=Defaults['bufferSize']):
 		self.debug=DEBUG
 		self.bufferSize=bufferSize-4
@@ -57,7 +55,7 @@ class SocksServer():
 				if self.debug > 2: print len(data) , size
 				data += s.recv((size-len(data)))
 			return data
-		except socket.error as e: #Socket error
+		except socket.error, e: #Socket error
 				self.printError(e)
 				pass
 
@@ -72,7 +70,7 @@ class SocksServer():
 		#print " Data: \\x" + ('\\x'.join(x.encode('hex') for x in data)),"fmt",fmt
 		try:
 			(version,command,port,ip,user) = struct.unpack(fmt,data[:8+user_idx])
-		except struct.error as e:
+		except struct.error, e:
 			self.printError(e)
 			if self.debug >2: print data
 			if self.debug >2: print " Data: \\x" + ('\\x'.join(x.encode('hex') for x in data))
@@ -116,19 +114,19 @@ class SocksServer():
 				sockets.append(outSock)
 				SocketDict[self.srcPort(outSock)] = inSrcPort,outSock		#Link incoming port to created socket
 				s.send(struct.pack('!HH',inSrcPort,len(granted))+granted)	#Send connection established responce
-			finally:
+			except:
 				if self.debug >4: print "[T] Establish connection releasing 1"
 				self.lock.release()
 			
 			if self.debug > 0: print "[S] Connection to "+host+" Established"
-		except (TypeError,socket.error, KeyError) as e :
+		except (TypeError,socket.error, KeyError), e :
 			print "[-] Socks: Rejected", e
 			
 			if self.debug >4: print "[T] Establish connection locking 2"
 			self.lock.acquire()
 			try:
 				s.send(struct.pack('!HH',inSrcPort,len(rejected))+rejected)	#Send connection rejected responce (port closed)
-			finally:
+			except:
 				if self.debug >4: print "[T] Establish connection releasing 2"
 				self.lock.release()
 			pass
@@ -185,7 +183,7 @@ class SocksServer():
 								self.lock.acquire()
 								try:
 									self.deleteISocket(outSock,SocketDict,sockets)
-								finally:
+								except:
 									self.lock.release()
 								outSock.close()
 								break
@@ -203,10 +201,10 @@ class SocksServer():
 							self.lock.acquire()
 							try:
 								wrapper_channel.send((struct.pack('!HH',SocketDict[self.srcPort(s)][0],len(data))+data))
-							except (TypeError,socket.error, KeyError) as e:
+							except (TypeError,socket.error, KeyError), e:
 								print "[-] Send Failed:", e
 								pass
-							finally:
+							else:
 								if debug >4: print "[T] Write to channel releasing 1"
 								self.lock.release()
 						
@@ -217,30 +215,30 @@ class SocksServer():
 							self.lock.acquire()
 							try:
 								wrapper_channel.send((struct.pack('!HH',SocketDict[self.srcPort(s)][0],len(data)))) 	#send empty to lSrc will close the socket on the other end
-							except (TypeError,socket.error, KeyError) as e :
+							except (TypeError,socket.error, KeyError) , e :
 								self.printError(e)
 								pass
-							finally:
+							else:
 								if debug >4: print "[T] Write to channel releasing 2"
 								self.lock.release()
 							
 							self.lock.acquire()
 							try:
 								self.deleteISocket(s,SocketDict,sockets)
-							finally:
+							except:
 								self.lock.release()
 
 							s.close()
-				except struct.error as e:
+				except struct.error , e:
 					print "[-] Received malformed packet: Closing Socks Proxy"
 					sys.exit()
-				except socket.error as e:	#Kill misbehaving socket
+				except socket.error , e:	#Kill misbehaving socket
 					self.printError(e)
 					try:
 						self.lock.acquire()
 						try:
 							self.deleteISocket(s,SocketDict,sockets)
-						finally:
+						except:
 							self.lock.release()
 						s.close()
 					except:
@@ -277,7 +275,10 @@ if __name__ == '__main__':
 	else:
 		options['webServerPort']=int(sys.argv[1])
 		#TODO: Parse Arguments
-		options=dict(Defaults.items() + options.items()) if options else Defaults
+		if options:
+			options=dict(Defaults.items() + options.items())
+		else:
+			options=Defaults
 
 		SocksServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 		SocksServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
