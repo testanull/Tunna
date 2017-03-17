@@ -172,7 +172,7 @@ if(!empty($_GET)){
 				}
 				//start process & save pid
 				//popen("start /B ". $_SESSION['file'], "r");	//Execute in windows
-				$proc=proc_open(($_SESSION['file']." ".$port),array(),$foo);
+				$proc=proc_open(('python '.$_SESSION['file']." ".$port),array(),$foo);
 				$pid=proc_get_status($proc);	
 				$_SESSION['pid']=$pid['pid'];
 				echo "[Server] Run ".$pid['pid'];
