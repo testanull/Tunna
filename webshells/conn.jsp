@@ -61,7 +61,7 @@ if(request.getParameter("proxy") == "" ){
 				os.close();
 				return;
 			}
-		}
+		
 	}
 	if (request.getParameter("close") == ""){	//if url parameter close is received: close socket / invalidate session
 		session.setAttribute("running","-1");		
